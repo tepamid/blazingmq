@@ -467,8 +467,7 @@ void Cluster::sendAck(bmqt::AckResult::Enum     status,
             cit->second.d_subQueueInfosMap.findBySubIdSafe(
                 bmqp::QueueId::k_DEFAULT_SUBQUEUE_ID);
         if (subQueueCiter != cit->second.d_subQueueInfosMap.end()) {
-            subQueueCiter->value().d_clientStats->onEvent(
-                mqbstat::ClusterNodeStats::EventType::e_ACK,
+            subQueueCiter->value().d_clientStats->onEvent<mqbstat::ClusterNodeStats::EventType::e_ACK>(
                 1);
         }
         // In the case of Strong Consistency, a Receipt can arrive and trigger
@@ -1206,8 +1205,8 @@ void Cluster::onPutEvent(const mqbi::DispatcherPutEvent& event)
             queueState.d_subQueueInfosMap.findBySubId(
                 bmqp::QueueId::k_DEFAULT_SUBQUEUE_ID);
 
-        subQueueCiter->value().d_clientStats->onEvent(
-            mqbstat::ClusterNodeStats::EventType::e_PUT,
+        subQueueCiter->value().d_clientStats->onEvent<mqbstat::ClusterNodeStats::EventType::e_PUT>(
+            
             appDataSp->length());
 
         // TBD: groupId: Similar to 'appDataSp' above, load 'optionsSp' here,
@@ -1644,8 +1643,7 @@ Cluster::validateMessage(mqbi::QueueHandle**       queueHandle,
 
     if (eventType == bmqp::EventType::e_CONFIRM) {
         // Update client stats
-        subQueueIt->value().d_clientStats->onEvent(
-            mqbstat::ClusterNodeStats::EventType::e_CONFIRM,
+        subQueueIt->value().d_clientStats->onEvent<mqbstat::ClusterNodeStats::EventType::e_CONFIRM>(
             1);
     }
 
@@ -1912,8 +1910,7 @@ void Cluster::onPushEvent(const mqbi::DispatcherPushEvent& event)
             queueState.d_subQueueInfosMap.findBySubscriptionId(
                 event.subQueueInfos()[i].id());
 
-        subQueueCiter->value().d_clientStats->onEvent(
-            mqbstat::ClusterNodeStats::EventType::e_PUSH,
+        subQueueCiter->value().d_clientStats->onEvent<mqbstat::ClusterNodeStats::EventType::e_PUSH>(
             event.blob() ? event.blob()->length() : 0);
     }
 

@@ -31,8 +31,10 @@
 
 // BMQ
 #include <bmqt_uri.h>
+#include <bmqst_statcontext.h>
 
 // MQB
+
 
 // BDE
 #include <bsl_memory.h>
@@ -47,10 +49,6 @@
 
 namespace BloombergLP {
 
-// FORWARD DECLARATION
-namespace bmqst {
-class StatContext;
-}
 
 namespace mqbstat {
 
@@ -341,7 +339,8 @@ class ClusterNodeStats {
     /// Update statistics for the event of the specified `type` and with the
     /// specified `value` (depending on the `type`, `value` can represent
     /// the number of bytes, a counter, ...
-    void onEvent(EventType::Enum type, bsls::Types::Int64 value);
+    template<EventType::Enum type>
+    void onEvent(bsls::Types::Int64 value);
 
     /// Return a pointer to the statcontext.
     bmqst::StatContext* statContext();
@@ -371,6 +370,35 @@ struct ClusterStatsUtil {
                                       bslma::Allocator* allocator);
 };
 
+// ----------------------------
+// struct ClusterNodeStatsIndex
+// ----------------------------
+
+/// Namespace for the constants of stat values that applies to the
+/// cluster node
+struct ClusterNodeStatsIndex {
+    enum Enum {
+        /// Value:      Number of ack messages delivered to the client
+        e_STAT_ACK
+
+        ,
+        e_STAT_CONFIRM
+        // Value:      Number of confirm messages delivered to the client
+
+        ,
+        e_STAT_PUSH
+        // Value:      Accumulated bytes of all messages ever pushed to
+        //             the client
+        // Increments: Number of messages ever pushed to the client
+
+        ,
+        e_STAT_PUT
+        // Value:      Accumulated bytes of all messages ever received from
+        //             the client
+        // Increments: Number of messages ever received from the client
+    };
+};
+
 // ============================================================================
 //                             INLINE DEFINITIONS
 // ============================================================================
@@ -392,6 +420,31 @@ inline bmqst::StatContext* ClusterNodeStats::statContext()
 {
     return d_statContext_mp.get();
 }
+
+
+template<>
+inline void ClusterNodeStats::onEvent<ClusterNodeStats::EventType::Enum::e_ACK>(BSLS_ANNOTATION_UNUSED bsls::Types::Int64 value) {
+d_statContext_mp->adjustValue(ClusterNodeStatsIndex::e_STAT_ACK, 1);
+}
+
+template<>
+inline void ClusterNodeStats::onEvent<ClusterNodeStats::EventType::Enum::e_CONFIRM>(BSLS_ANNOTATION_UNUSED bsls::Types::Int64 value) {
+d_statContext_mp->adjustValue(ClusterNodeStatsIndex::e_STAT_CONFIRM,
+                                      1);
+}
+
+template<>
+inline void ClusterNodeStats::onEvent<ClusterNodeStats::EventType::Enum::e_PUSH>(bsls::Types::Int64 value) {
+d_statContext_mp->adjustValue(ClusterNodeStatsIndex::e_STAT_PUSH,
+                                      value);
+}
+
+template<>
+inline void ClusterNodeStats::onEvent<ClusterNodeStats::EventType::Enum::e_PUT>(bsls::Types::Int64 value) {
+d_statContext_mp->adjustValue(ClusterNodeStatsIndex::e_STAT_PUT,
+                                      value);
+}
+
 
 }  // close package namespace
 }  // close enterprise namespace
